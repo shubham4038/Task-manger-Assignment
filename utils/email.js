@@ -1,18 +1,18 @@
+//Sendgird to send email to user
+
+require('dotenv').config({path : './config.env'});
 const sgMail = require('@sendgrid/mail');
 
-const API_KEY = process.env.EMAIL_API_KEY;
-
-sgMail.setApiKey(API_KEY);
+sgMail.setApiKey(process.env.EMAIL_API_KEY);
 
 const sendEmail = (to, subject, text, html) => {
     const message = {
       to: to,
-      from: 'reactjs4038@gmail.com',
+      from : process.env.EMAIL_FROM,
       subject: subject,
       text: text,
       html: html
     };
-    
     return sgMail.send(message);
   };
   

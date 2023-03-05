@@ -5,6 +5,7 @@ const {promisify} = require('util');
 
 exports.signup = async (req,res)=> {
     try {
+        //Sending user deatils from req body
         const {firstname , lastname , email, password,passwordConfirm} = req.body;
         const user = await User.findOne({email})
         if(user){
@@ -15,7 +16,6 @@ exports.signup = async (req,res)=> {
             })
         }
         const newUser = await User.create({firstname,lastname,email,password,passwordConfirm});
-
         //OTP generation
         const OTP = Math.floor(100000 + Math.random() * 900000);
         newUser.OTP=OTP;
@@ -23,14 +23,11 @@ exports.signup = async (req,res)=> {
         const emailSubject = 'OTP Verification Code';
         const emailText = `Your OTP verification code is ${OTP}`;
         const emailHtml = `<p>Your OTP verification code is <strong>${OTP}</strong></p>`;
-        await sendEmail(newUser.email, emailSubject, emailText, emailHtml);
- 
+        await sendEmail(email, emailSubject, emailText, emailHtml);
         res.status(201).json({
             status:"Success",
-            message:"User created successfully",
-            data:{
-                newUser
-            }
+            message:"Sign up successfull Please verify your otp to Login",
+            
         })
     } catch (error) {
         res.status(400).json({
@@ -69,14 +66,16 @@ exports.login = async (req,res)=>{
             message: "Please verify your OTP",
         })
     }
+    //Creating JWT token 
     let token_jwt = jwt.sign({id:user._id},process.env.JWT_SECRET_KEY,{expiresIn : process.env.JWT_EXPIRY})
     res.status(201).json({
         status:"Success",
-        message: "User succesfulyy logged in",
-        data:{
-            user,
-            token_jwt
+        message: "User succesfulyy logged in, You can now create,read,update and delete your Tasks",
+        token_jwt,
+        userdetails:{
+            user
         }
+        
     })
 
     } catch (error) {
@@ -92,6 +91,7 @@ exports.login = async (req,res)=>{
 
 exports.verifyOtp = async (req,res)=>{
     const {email,OTP} = req.body
+    //If email or OTp is not entered in body
     if(!email || !OTP){
         res.status(400).json({
             status:"failed",
