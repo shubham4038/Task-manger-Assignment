@@ -1,4 +1,6 @@
 const Task = require('../models/taskModel');
+const catchAsync = require('../utils/catchAsync');
+const Apperror = require('../utils/apperror');
 
 
 exports.createTask = async (req,res) =>{
@@ -71,14 +73,18 @@ exports.deleteTask = async(req,res)=>{
 
 }
 
-exports.reArrangedTask = async(req,res)=>{
+exports.reArrangedTask = catchAsync (async(req,res)=>{
     let presentTask = await Task.find({user :req.user._id});
     const {newSequence} = req.body;
     if(!(newSequence.length == presentTask.length)){
-        res.status(201).json({
-            status : "failed",
-            message:"Sequence spoecified doesn't amtch with the present sequence"
-        })
+        return next(new Apperror("Sequence spoecified doesn't amtch with the present sequence",404));
+    }
+    const duplicates = newSequence.filter((el,index)=>{
+        return newSequence.indexOf(el) !== index;
+
+    })
+    if(duplicates.length>0){
+        return next(new Apperror("Duplicate sequence number found in given sequenxe please valid sequence",404));
     }
     for(let i=0;i<presentTask.length;i++){
         if(newSequence[i] == presentTask[i].position) continue;
@@ -93,4 +99,4 @@ exports.reArrangedTask = async(req,res)=>{
         }
     })
 
-}
+})
